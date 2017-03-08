@@ -47,7 +47,7 @@ class PaymentClient
                 $params['webhook'] = $webhook;
             }
 
-            $response = $this->client->request('POST', '/api/invoice', [
+            $response = $this->client->request('POST', '/api/createInvoice', [
                 'json' => $params
             ]);
             $result = $this->getResult($response->getBody()->getContents());
@@ -68,7 +68,7 @@ class PaymentClient
     public function getInvoiceInfo($id, $salt)
     {
         try {
-            $response = $this->client->request('GET', '/api/invoice/info', [
+            $response = $this->client->request('GET', '/api/getInvoice', [
                 'query' => [
                     'shop_name'      => $this->shopName,
                     'invoice_id'     => $id,
@@ -93,6 +93,65 @@ class PaymentClient
     public function invoiceUrl(Invoice $invoice)
     {
         return $this->client->getConfig('base_uri').'v/'.$invoice->id.'/'.$invoice->salt;
+    }
+
+    public function getWallet($walletId = null, $userId = null)
+    {
+        $response = $this->client->request('GET', '/api/getWallet', [
+            'query' => [
+                'shop_name' => $this->shopName,
+                'wallet_id' => $walletId,
+                'user_id'   => $userId,
+            ],
+        ]);
+        return new Wallet($this->getResult($response->getBody()->getContents()));
+    }
+
+    public function createWallet($userId, $amount)
+    {
+        $response = $this->client->request('POST', '/api/createWallet', [
+            'json' => [
+                'shop_name' => $this->shopName,
+                'user_id'   => $userId,
+                'amount'    => $amount,
+            ],
+        ]);
+
+        return new Wallet($this->getResult($response->getBody()->getContents()));
+    }
+
+    public function chargeWallet($walletId, $amount, $uid, $description)
+    {
+        $response = $this->client->request('POST', '/api/chargeWallet', [
+            'json' => [
+                'shop_name'   => $this->shopName,
+                'wallet_id'   => $walletId,
+                'amount'      => $amount,
+                'uid'         => $uid,
+                'description' => $description,
+            ],
+        ]);
+
+        return new Transaction($this->getResult($response->getBody()->getContents()));
+    }
+
+    public function queryTransactions($descending = true, $walletId = null, $offset = null, $limit = null)
+    {
+        $query = ['decending' => $descending];
+        if (! is_null($walletId)) {
+            $query['wallet_id'] = $walletId;
+        }
+        if (! is_null($offset)) {
+            $query['offset'] = $offset;
+        }
+        if (! is_null($limit)) {
+            $query['limit'] = $limit;
+        }
+        $response = $this->client->request('GET', '/api/queryTransactions', [
+            'query' => $query,
+        ]);
+
+        return $this->toTransactions($this->getResult($response->getBody()->getContents()));
     }
 
     /**
