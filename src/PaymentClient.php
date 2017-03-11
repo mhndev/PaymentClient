@@ -122,23 +122,21 @@ class PaymentClient
     }
 
     /**
-     * Create a wallet for a user with the given initial (credit) amount.
+     * Create a wallet for a user.
      *
      * @param string $userId
-     * @param int $amount
      *
      * @throws PaymentException
      *
      * @return Wallet
      */
-    public function createWallet($userId, $amount)
+    public function createWallet($userId)
     {
         try {
             $response = $this->client->request('POST', '/api/createWallet', [
                 'json' => [
                     'shop_name' => $this->shopName,
                     'user_id'   => $userId,
-                    'amount'    => $amount,
                 ],
             ]);
 
