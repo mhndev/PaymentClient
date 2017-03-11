@@ -2,6 +2,9 @@
 
 namespace Digipeyk\PaymentClient;
 
+use Digipeyk\PaymentClient\Objects\Invoice;
+use Digipeyk\PaymentClient\Objects\Transaction;
+use Digipeyk\PaymentClient\Objects\Wallet;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
@@ -34,11 +37,12 @@ class PaymentClient
         ], $guzzleConfig)));
     }
 
-    public function createInvoice($amount, $redirectUrl, $webhook = null)
+    public function createInvoice($walletId, $amount, $redirectUrl, $webhook = null)
     {
         try {
             $params = [
                 'shop_name' => $this->shopName,
+                'wallet_id' => $walletId,
                 'redirect_url' => $redirectUrl,
                 'amount' => $amount,
             ];
@@ -50,11 +54,10 @@ class PaymentClient
             $response = $this->client->request('POST', '/api/createInvoice', [
                 'json' => $params
             ]);
-            $result = $this->getResult($response->getBody()->getContents());
+            return new Invoice($this->getResult($response->getBody()->getContents()));
         } catch (RequestException $e) {
             throw new PaymentException($e->getMessage(), $e->getCode(), $e);
         }
-        return new Invoice($result['invoice']['id'], $result['invoice']['salt'], false, null, null);
     }
 
     /**
@@ -75,15 +78,11 @@ class PaymentClient
                     'invoice_salt'   => $salt,
                 ]
             ]);
-            $result = $this->getResult($response->getBody()->getContents());
+
+            return new Invoice($this->getResult($response->getBody()->getContents()));
         } catch (RequestException $e) {
             throw new PaymentException($e->getMessage(), $e->getCode(), $e);
         }
-
-        $done = isset($result['transaction']['payment_done']) ? $result['transaction']['payment_done'] : null;
-        $verified = isset($result['transaction']['verified']) ? $result['transaction']['verified'] : null;
-
-        return new Invoice($result['id'], $result['salt'], $done, $verified, $result);
     }
 
     /**
@@ -95,7 +94,15 @@ class PaymentClient
         return $this->client->getConfig('base_uri').'v/'.$invoice->id.'/'.$invoice->salt;
     }
 
-    public function getWallet($walletId = null, $userId = null)
+    /**
+     * Get wallet by wallet id or user id.
+     *
+     * @param int|null $walletId
+     * @param string|null $userId
+     *
+     * @return Wallet
+     */
+    public function getWallet($walletId, $userId)
     {
         $response = $this->client->request('GET', '/api/getWallet', [
             'query' => [
@@ -104,9 +111,18 @@ class PaymentClient
                 'user_id'   => $userId,
             ],
         ]);
+
         return new Wallet($this->getResult($response->getBody()->getContents()));
     }
 
+    /**
+     * Create a wallet for a user with the given initial (credit) amount.
+     *
+     * @param string $userId
+     * @param int $amount
+     *
+     * @return Wallet
+     */
     public function createWallet($userId, $amount)
     {
         $response = $this->client->request('POST', '/api/createWallet', [
@@ -120,6 +136,16 @@ class PaymentClient
         return new Wallet($this->getResult($response->getBody()->getContents()));
     }
 
+    /**
+     * Charge the wallet by the given amount, iff the uid is not duplicate.
+     *
+     * @param int $walletId
+     * @param int $amount
+     * @param string $uid
+     * @param string $description
+     *
+     * @return Transaction
+     */
     public function chargeWallet($walletId, $amount, $uid, $description)
     {
         $response = $this->client->request('POST', '/api/chargeWallet', [
@@ -135,6 +161,16 @@ class PaymentClient
         return new Transaction($this->getResult($response->getBody()->getContents()));
     }
 
+    /**
+     * Search in the list of transactions. The result is simple-paginated (not length aware).
+     *
+     * @param bool $descending
+     * @param int|null $walletId
+     * @param int|null $offset
+     * @param int|null $limit
+     *
+     * @return Transaction[]
+     */
     public function queryTransactions($descending = true, $walletId = null, $offset = null, $limit = null)
     {
         $query = ['decending' => $descending];
@@ -152,6 +188,13 @@ class PaymentClient
         ]);
 
         return $this->toTransactions($this->getResult($response->getBody()->getContents()));
+    }
+
+    private function toTransactions(array $transactions)
+    {
+        return array_map(function (array $transaction) {
+            return new Transaction($transaction);
+        }, $transactions);
     }
 
     /**

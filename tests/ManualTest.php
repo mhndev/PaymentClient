@@ -17,7 +17,7 @@ class ManualTest extends PHPUnit_Framework_TestCase
 
     public function test_pay()
     {
-        $invoice = $this->client->createInvoice(1000, 'http://localhost:8002');
+        $invoice = $this->client->createInvoice(21, 1000, 'http://localhost:8002');
         var_dump($invoice);
         echo $this->client->invoiceUrl($invoice)."\n";
         ob_flush();
