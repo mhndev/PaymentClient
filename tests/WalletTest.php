@@ -1,7 +1,7 @@
 <?php
 
+use Digipeyk\PaymentClient\Exceptions\PaymentException;
 use Digipeyk\PaymentClient\PaymentClient;
-use Digipeyk\PaymentClient\PaymentException;
 
 class WalletTest extends PHPUnit_Framework_TestCase
 {

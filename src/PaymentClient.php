@@ -2,6 +2,8 @@
 
 namespace Digipeyk\PaymentClient;
 
+use Digipeyk\PaymentClient\Exceptions\MalformedResponseException;
+use Digipeyk\PaymentClient\Exceptions\PaymentException;
 use Digipeyk\PaymentClient\Objects\Invoice;
 use Digipeyk\PaymentClient\Objects\Transaction;
 use Digipeyk\PaymentClient\Objects\Wallet;
@@ -225,7 +227,7 @@ class PaymentClient
     /**
      * @param string $body
      *
-     * @throws PaymentException
+     * @throws MalformedResponseException
      *
      * @return array
      */
@@ -233,12 +235,9 @@ class PaymentClient
     {
         $decoded = json_decode($body, true);
 
-        if (! isset($decoded['success']) || ! $decoded['success'] || ! isset($decoded['result'])) {
+        if (! isset($decoded['status']) || $decoded['status'] != 'OK' || ! isset($decoded['result'])) {
 
-            $message = isset($content['message']) ? $content['message'] : $body;
-            $errors = isset($content['errors']) ? $content['errors'] : [];
-
-            throw new PaymentException($message, 200, $errors);
+            throw new MalformedResponseException($body);
         }
 
         return $decoded['result'];
@@ -246,20 +245,6 @@ class PaymentClient
 
     private function wrapException(RequestException $e)
     {
-        $message = $e->getMessage();
-        $code = $e->getCode();
-        $errors = [];
-        if ($response = $e->getResponse()) {
-            if ($content = json_decode($response->getBody()->getContents(), true)) {
-                if (isset($content['message'])) {
-                    $message = $content['message'];
-                }
-                if (isset($content['errors'])) {
-                    $errors = $content['errors'];
-                }
-            }
-        }
-
-        return new PaymentException($message, $code, $errors, $e);
+        return new PaymentException($e);
     }
 }

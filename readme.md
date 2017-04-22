@@ -6,9 +6,10 @@ See the ManualTest class.
 3. GatewayTransaction
 4. Wallet
 # Exceptions
-If something wrong happen, when calling an API function using the `PaymentClient` class,
-an exception of type `PaymentException` will return.
-Be prepared to appropriately catch the exception and take appropriate action.
+If something wrong happen when calling an API function using the `PaymentClient` class,
+an exception of type `PaymentException` will be raised.
+Be prepared to catch the exception and take the appropriate actions.
+
 # Tests
 The tests are compatible with server's test seeds run by the following command:
 
