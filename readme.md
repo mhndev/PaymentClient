@@ -11,6 +11,7 @@ an exception of type `PaymentException` will be raised.
 Be prepared to catch the exception and take the appropriate actions.
 
 # Tests
+Before running test, `putenv` a valid `OAUT_TOKEN` in `tests/.env.php`.
 The tests are compatible with server's test seeds run by the following command:
 
     php artisan db:seed --class TestDatabaseSeeder

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit backupGlobals="false"
          backupStaticAttributes="false"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/autoload.php"
          colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
@@ -11,12 +11,12 @@
          syntaxCheck="false"
 >
     <testsuites>
-        <testsuite name="tests">
-            <directory>./tests/</directory>
+        <testsuite name="Integration Tests">
+            <directory>./tests/Integration</directory>
         </testsuite>
     </testsuites>
     <php>
-        <env name="SERVER_URL" value="http://localhost:8001/"/>
+        <env name="SERVER_URL" value="http://localhost:8003/"/>
         <env name="SHOP_NAME" value="digizar"/>
     </php>
 </phpunit>

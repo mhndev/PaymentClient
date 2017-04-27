@@ -2,6 +2,8 @@
 
 namespace Digipeyk\PaymentClient;
 
+use Digipeyk\PaymentClient\Auth\StringTokenResolver;
+use Digipeyk\PaymentClient\Auth\TokenResolverInterface;
 use Digipeyk\PaymentClient\Exceptions\MalformedResponseException;
 use Digipeyk\PaymentClient\Exceptions\PaymentException;
 use Digipeyk\PaymentClient\Objects\Invoice;
@@ -23,20 +25,48 @@ class PaymentClient
     protected $client;
 
     /**
+     * @var TokenResolverInterface|string
+     */
+    protected $token;
+
+    /**
      * @param string $shopName
      * @param Client $client
+     * @param string|TokenResolverInterface $token
      */
-    public function __construct($shopName, Client $client)
+    public function __construct($shopName, Client $client, $token)
     {
         $this->shopName = $shopName;
         $this->client = $client;
+        $this->token = $token instanceof TokenResolverInterface ? $token : new StringTokenResolver($token);
     }
 
-    public static function create($shopName, $serverUrl, $guzzleConfig = [])
+    public static function create($shopName, $serverUrl, $token, $guzzleConfig = [])
     {
         return new static($shopName, new Client(array_merge([
             'base_uri' => $serverUrl
-        ], $guzzleConfig)));
+        ], $guzzleConfig)), $token);
+    }
+
+    protected function request($method, $url, $options, $retry = true)
+    {
+        $headers['headers'] = [
+            'Accept'        => 'application/json',
+            'Authorization' => 'Bearer '.$this->token->getToken(),
+        ];
+        try {
+            return $this->client->request($method, $url, array_merge($options, $headers));
+        } catch (RequestException $e) {
+            if ($e->getCode() == 401 && $retry) {
+                try {
+                    $this->token->refreshToken();
+                } catch (\Exception $refreshException) {
+                    throw $e;
+                }
+                return $this->request($method, $url, $options, false);
+            }
+            throw $e;
+        }
     }
 
     public function createInvoice($walletId, $amount, $redirectUrl, $webhook = null)
@@ -53,7 +83,7 @@ class PaymentClient
                 $params['webhook'] = $webhook;
             }
 
-            $response = $this->client->request('POST', '/api/createInvoice', [
+            $response = $this->request('POST', '/api/createInvoice', [
                 'json' => $params
             ]);
             return new Invoice($this->getResult($response->getBody()->getContents()));
@@ -73,7 +103,7 @@ class PaymentClient
     public function getInvoiceInfo($id, $salt)
     {
         try {
-            $response = $this->client->request('GET', '/api/getInvoice', [
+            $response = $this->request('GET', '/api/getInvoice', [
                 'query' => [
                     'shop_name'      => $this->shopName,
                     'invoice_id'     => $id,
@@ -109,7 +139,7 @@ class PaymentClient
     public function getWallet($walletId, $userId = null)
     {
         try {
-            $response = $this->client->request('GET', '/api/getWallet', [
+            $response = $this->request('GET', '/api/getWallet', [
                 'query' => [
                     'shop_name' => $this->shopName,
                     'wallet_id' => $walletId,
@@ -135,7 +165,7 @@ class PaymentClient
     public function createWallet($userId)
     {
         try {
-            $response = $this->client->request('POST', '/api/createWallet', [
+            $response = $this->request('POST', '/api/createWallet', [
                 'json' => [
                     'shop_name' => $this->shopName,
                     'user_id'   => $userId,
@@ -163,7 +193,7 @@ class PaymentClient
     public function chargeWallet($walletId, $amount, $uid, $description)
     {
         try {
-            $response = $this->client->request('POST', '/api/chargeWallet', [
+            $response = $this->request('POST', '/api/chargeWallet', [
                 'json' => [
                     'shop_name'   => $this->shopName,
                     'wallet_id'   => $walletId,
@@ -207,7 +237,7 @@ class PaymentClient
             if (! is_null($limit)) {
                 $query['limit'] = $limit;
             }
-            $response = $this->client->request('GET', '/api/queryTransactions', [
+            $response = $this->request('GET', '/api/queryTransactions', [
                 'query' => $query,
             ]);
 

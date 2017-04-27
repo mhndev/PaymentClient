@@ -11,7 +11,7 @@ class ManualTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->client = PaymentClient::create(getenv('SHOP_NAME'), getenv('SERVER_URL'));
+        $this->client = PaymentClient::create(getenv('SHOP_NAME'), getenv('SERVER_URL'), getenv('OAUTH_TOKEN'));
         parent::setUp();
     }
 
