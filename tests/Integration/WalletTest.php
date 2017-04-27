@@ -27,5 +27,10 @@ class WalletTest extends PHPUnit_Framework_TestCase
         } catch (PaymentException $e) {
             $this->assertEquals(400, $e->getCode());
         }
+
+        $transaction = $this->client->chargeWallet($wallet->id, 1000, 'test1:'.$userId, '...');
+        $this->assertEquals($transaction->id,
+            $this->client->chargeOrGetTransaction($wallet->id, 1000, 'test1:'.$userId, '...')->id
+        );
     }
 }

@@ -209,6 +209,27 @@ class PaymentClient
         }
     }
 
+    public function chargeOrGetTransaction($walletId, $amount, $uid, $description)
+    {
+        try {
+            return $this->chargeWallet($walletId, $amount, $uid, $description);
+        } catch (PaymentException $e) {
+            if ($e->getCode() != 400) {
+                throw $e;
+            }
+            $json = json_decode($e->body, true);
+            if (! is_array($json) ||
+                ! array_key_exists('error', $json) ||
+                ! is_array($json['error']) ||
+                ! array_key_exists('code', $json['error']) ||
+                $json['error']['code'] != 'DuplicateUid'
+            ) {
+                throw $e;
+            }
+            return new Transaction($json['error']['info']['transaction']);
+        }
+    }
+
     /**
      * Search in the list of transactions. The result is simple-paginated (not length aware).
      *
