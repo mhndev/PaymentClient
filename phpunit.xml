@@ -17,6 +17,6 @@
     </testsuites>
     <php>
         <env name="SERVER_URL" value="http://localhost:8003/"/>
-        <env name="SHOP_NAME" value="digizar"/>
+        <env name="SHOP_NAME" value="digipeyk"/>
     </php>
 </phpunit>

@@ -18,7 +18,7 @@ class BaseObject
 
     public function __get($name)
     {
-        $value = $this->data[$name] ?: null;
+        $value = is_null($this->data[$name]) ? null : $this->data[$name];
         if (is_array($value) && array_key_exists($name, $this->relations)) {
             $class = $this->relations[$name];
             $value = new $class($value);
