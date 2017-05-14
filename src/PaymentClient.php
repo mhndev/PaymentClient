@@ -8,6 +8,7 @@ use Digipeyk\PaymentClient\Exceptions\MalformedResponseException;
 use Digipeyk\PaymentClient\Exceptions\PaymentException;
 use Digipeyk\PaymentClient\Objects\Invoice;
 use Digipeyk\PaymentClient\Objects\Transaction;
+use Digipeyk\PaymentClient\Objects\TransferAndPayDescriptions;
 use Digipeyk\PaymentClient\Objects\Wallet;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -218,19 +219,37 @@ class PaymentClient
         try {
             return $this->chargeWallet($walletId, $amount, $uid, $description, $isVirtual, $coupon);
         } catch (PaymentException $e) {
-            if ($e->getCode() != 400) {
-                throw $e;
-            }
-            $json = json_decode($e->body, true);
-            if (! is_array($json) ||
-                ! array_key_exists('error', $json) ||
-                ! is_array($json['error']) ||
-                ! array_key_exists('code', $json['error']) ||
-                $json['error']['code'] != 'DuplicateUid'
-            ) {
-                throw $e;
-            }
-            return new Transaction($json['error']['info']['transaction']);
+            return $this->getTransactionFromException($e);
+        }
+    }
+
+    public function transferAndPay($fromWalletId, $toWalletId, $amount, $uid,
+                                   TransferAndPayDescriptions $descriptions, $coupon)
+    {
+        try {
+            $response = $this->request('POST', '/api/transferAndPay', [
+                'json' => [
+                    'from_wallet_id'    => $fromWalletId,
+                    'to_wallet_id'      => $toWalletId,
+                    'amount'            => $amount,
+                    'uid'               => $uid,
+                    'descriptions'      => $descriptions->toArray(),
+                    'coupon'            => $coupon,
+                ],
+            ]);
+        } catch (RequestException $e) {
+            throw $this->wrapException($e);
+        }
+        return new Transaction($this->getResult($response->getBody()->getContents()));
+    }
+
+    public function transferAndPayOrGetTransaction($fromWalletId, $toWalletId, $amount, $uid,
+                                                   TransferAndPayDescriptions $descriptions, $coupon)
+    {
+        try {
+            return $this->transferAndPay($fromWalletId, $toWalletId, $amount, $uid, $descriptions, $coupon);
+        } catch (PaymentException $e) {
+            return $this->getTransactionFromException($e);
         }
     }
 
@@ -301,5 +320,29 @@ class PaymentClient
     private function wrapException(RequestException $e)
     {
         return new PaymentException($e);
+    }
+
+    /**
+     * @param PaymentException $e
+     *
+     * @throws PaymentException
+     *
+     * @return Transaction
+     */
+    private function getTransactionFromException(PaymentException $e)
+    {
+        if ($e->getCode() != 400) {
+            throw $e;
+        }
+        $json = json_decode($e->body, true);
+        if (!is_array($json) ||
+            !array_key_exists('error', $json) ||
+            !is_array($json['error']) ||
+            !array_key_exists('code', $json['error']) ||
+            $json['error']['code'] != 'DuplicateUid'
+        ) {
+            throw $e;
+        }
+        return new Transaction($json['error']['info']['transaction']);
     }
 }
