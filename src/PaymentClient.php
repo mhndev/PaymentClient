@@ -280,15 +280,15 @@ class PaymentClient
      * @param DateTime|null $fromDate
      * @param DateTime|null $toDate
      * @param bool $descending
-     * @param int|null $offset
-     * @param int|null $limit
+     * @param int|null $page
+     * @param int|null $perPage
      *
      * @throws PaymentException
      *
      * @return TransactionPagination
      */
     public function queryTransactions($userId = null, DateTime $fromDate = null, DateTime $toDate = null,
-                                      $descending = true, $page = 1, $n = 100)
+                                      $descending = true, $page = 1, $perPage = 100)
     {
         try {
             $query = [
@@ -307,8 +307,8 @@ class PaymentClient
             if (! is_null($page)) {
                 $query['page'] = $page;
             }
-            if (! is_null($n)) {
-                $query['perPage'] = $n;
+            if (! is_null($perPage)) {
+                $query['perPage'] = $perPage;
             }
             $response = $this->request('GET', '/api/digipeyk/queryTransactions', [
                 'query' => $query,
