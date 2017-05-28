@@ -1,6 +1,7 @@
 <?php
 
 use Digipeyk\PaymentClient\Exceptions\PaymentException;
+use Digipeyk\PaymentClient\Objects\TransferAndPayDescriptions;
 use Digipeyk\PaymentClient\PaymentClient;
 
 class WalletTest extends PHPUnit_Framework_TestCase
@@ -39,5 +40,24 @@ class WalletTest extends PHPUnit_Framework_TestCase
         $freshWallet = $this->client->getWallet($wallet->id);
         $this->assertEquals(1000, $freshWallet->credit);
         $this->assertEquals(1000, $freshWallet->sum_charges);
+    }
+
+    public function test_transfer_and_pay_accept_negative_credit()
+    {
+        $user1Id = 'rand:'.uniqid('', true);
+        $user2Id = 'rand:'.uniqid('', true);
+        $wallet1 = $this->client->createWallet($user1Id);
+        $wallet2 = $this->client->createWallet($user2Id);
+        $transaction = $this->client->transferAndPay($wallet1->id, $wallet2->id, 1000, 'test:123:'.$user1Id,
+            new TransferAndPayDescriptions('1', '2', '3'), null);
+        $this->assertEquals(1000, $transaction->credit_before);
+        $this->assertEquals(-1000, $transaction->amount);
+        $wallet1 = $this->client->getWallet($wallet1->id);
+        $this->assertEquals(-1000, $wallet1->credit);
+        $transaction = $this->client->chargeWallet($wallet1->id, 3000, 'test:234'.$user1Id, 'none');
+        $this->assertEquals(-1000, $transaction->credit_before);
+        $wallet1 = $this->client->getWallet($wallet1->id);
+        $this->assertEquals(2000, $wallet1->credit);
+        $this->assertEquals(3000, $wallet1->sum_charges);
     }
 }

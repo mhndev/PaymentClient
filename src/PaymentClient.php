@@ -230,6 +230,7 @@ class PaymentClient
         try {
             $response = $this->request('POST', '/api/transferAndPay', [
                 'json' => [
+                    'shop_name'         => $this->shopName,
                     'from_wallet_id'    => $fromWalletId,
                     'to_wallet_id'      => $toWalletId,
                     'amount'            => $amount,
