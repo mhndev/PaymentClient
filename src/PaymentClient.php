@@ -2,12 +2,14 @@
 
 namespace Digipeyk\PaymentClient;
 
+use DateTime;
 use Digipeyk\PaymentClient\Auth\StringTokenResolver;
 use Digipeyk\PaymentClient\Auth\TokenResolverInterface;
 use Digipeyk\PaymentClient\Exceptions\MalformedResponseException;
 use Digipeyk\PaymentClient\Exceptions\PaymentException;
 use Digipeyk\PaymentClient\Objects\Invoice;
 use Digipeyk\PaymentClient\Objects\Transaction;
+use Digipeyk\PaymentClient\Objects\TransactionPagination;
 use Digipeyk\PaymentClient\Objects\TransferAndPayDescriptions;
 use Digipeyk\PaymentClient\Objects\Wallet;
 use GuzzleHttp\Client;
@@ -274,32 +276,41 @@ class PaymentClient
     /**
      * Search in the list of transactions. The result is simple-paginated (not length aware).
      *
+     * @param int|null $userId
+     * @param DateTime|null $fromDate
+     * @param DateTime|null $toDate
      * @param bool $descending
-     * @param int|null $walletId
      * @param int|null $offset
      * @param int|null $limit
      *
      * @throws PaymentException
      *
-     * @return Transaction[]
+     * @return TransactionPagination
      */
-    public function queryTransactions($descending = true, $walletId = null, $offset = null, $limit = null)
+    public function queryTransactions($userId = null, DateTime $fromDate = null, DateTime $toDate = null,
+                                      $descending = true, $page = 1, $n = 100)
     {
         try {
             $query = [
                 'shop_name' => $this->shopName,
                 'descending' => $descending,
             ];
-            if (! is_null($walletId)) {
-                $query['wallet_id'] = $walletId;
+            if (! is_null($userId)) {
+                $query['user_id'] = $userId;
             }
-            if (! is_null($offset)) {
-                $query['offset'] = $offset;
+            if (! is_null($fromDate)) {
+                $query['from_date'] = $fromDate->format('Y-m-d H:i:s');
             }
-            if (! is_null($limit)) {
-                $query['limit'] = $limit;
+            if (! is_null($toDate)) {
+                $query['to_date'] = $toDate->format('Y-m-d H:i:s');
             }
-            $response = $this->request('GET', '/api/queryTransactions', [
+            if (! is_null($page)) {
+                $query['page'] = $page;
+            }
+            if (! is_null($n)) {
+                $query['perPage'] = $n;
+            }
+            $response = $this->request('GET', '/api/digipeyk/queryTransactions', [
                 'query' => $query,
             ]);
 
@@ -309,11 +320,15 @@ class PaymentClient
         }
     }
 
-    private function toTransactions(array $transactions)
+    private function toTransactions(array $paginator)
     {
-        return array_map(function (array $transaction) {
+        $transactions = array_map(function (array $transaction) {
             return new Transaction($transaction);
-        }, $transactions);
+        }, $paginator['_embedded']['transactions']);
+
+        $total = $paginator['total'];
+
+        return new TransactionPagination($transactions, $total);
     }
 
     /**
