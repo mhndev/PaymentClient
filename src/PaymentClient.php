@@ -148,7 +148,7 @@ class PaymentClient
                 ],
             ]);
 
-            return new Wallet($this->getResult($response->getBody()->getContents()));
+            return new Wallet($this->getResult((string) $response->getBody()));
         } catch (RequestException $e) {
             throw $this->wrapException($e);
         }
@@ -214,7 +214,8 @@ class PaymentClient
         }
     }
 
-    public function chargeOrGetTransaction($walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null)
+    public function chargeOrGetTransaction(
+        $walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null)
     {
         try {
             return $this->chargeWallet($walletId, $amount, $uid, $description, $isVirtual, $coupon);
@@ -250,6 +251,22 @@ class PaymentClient
             return $this->transferAndPay($fromWalletId, $toWalletId, $amount, $uid, $descriptions, $coupon);
         } catch (PaymentException $e) {
             return $this->getTransactionFromException($e);
+        }
+    }
+
+    public function revertTransaction($transactionId, $description)
+    {
+        try {
+            $response = $this->request('POST', '/api/revertTransaction', [
+                'json' => [
+                    'shop_name' => $this->shopName,
+                    'transaction_id' => $transactionId,
+                    'description' => $description,
+                ],
+            ]);
+            return new Transaction($this->getResult((string)$response->getBody()));
+        } catch (RequestException $e) {
+            throw $this->wrapException($e);
         }
     }
 
