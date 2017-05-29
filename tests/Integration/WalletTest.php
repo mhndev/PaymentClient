@@ -54,7 +54,7 @@ class WalletTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(-1000, $transaction->amount);
         $wallet1 = $this->client->getWallet($wallet1->id);
         $this->assertEquals(-1000, $wallet1->credit);
-        $transaction = $this->client->chargeWallet($wallet1->id, 3000, 'test:234'.$user1Id, 'none');
+        $transaction = $this->client->chargeWallet($wallet1->id, 3000, 'test:234'.$user1Id, 'ندارد');
         $this->assertEquals(-1000, $transaction->credit_before);
         $wallet1 = $this->client->getWallet($wallet1->id);
         $this->assertEquals(2000, $wallet1->credit);
