@@ -329,9 +329,12 @@ class PaymentClient
             return new Transaction($transaction);
         }, $paginator['_embedded']['transactions']);
 
-        $total = $paginator['total'];
-
-        return new TransactionPagination($transactions, $total);
+        return new TransactionPagination(
+            $transactions,
+            $paginator['total'],
+            $paginator['per_page'],
+            $paginator['current_page'],
+            $paginator['last_page']);
     }
 
     /**
