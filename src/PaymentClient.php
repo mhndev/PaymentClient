@@ -279,6 +279,7 @@ class PaymentClient
      * @param int|null $userId
      * @param DateTime|null $fromDate
      * @param DateTime|null $toDate
+     * @param bool $pair
      * @param bool $descending
      * @param int|null $page
      * @param int|null $perPage
@@ -288,13 +289,15 @@ class PaymentClient
      * @return TransactionPagination
      */
     public function queryTransactions($userId = null, DateTime $fromDate = null, DateTime $toDate = null,
-                                      $descending = true, $page = 1, $perPage = 100)
+                                      $pair = true, $descending = true, $page = 1, $perPage = 100)
     {
         try {
             $query = [
-                'shop_name' => $this->shopName,
-                'descending' => $descending,
+                'shop_name'  => $this->shopName,
+                'descending' => (bool) $descending,
+                'pair'       => (bool) $pair,
             ];
+
             if (! is_null($userId)) {
                 $query['user_id'] = $userId;
             }
