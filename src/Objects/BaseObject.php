@@ -2,7 +2,9 @@
 
 namespace Digipeyk\PaymentClient\Objects;
 
-class BaseObject
+use JsonSerializable;
+
+class BaseObject implements JsonSerializable
 {
     /**
      * @var array
@@ -30,6 +32,11 @@ class BaseObject
      * @return array
      */
     public function getData()
+    {
+        return $this->data;
+    }
+
+    function jsonSerialize()
     {
         return $this->data;
     }
