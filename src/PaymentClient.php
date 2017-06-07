@@ -182,12 +182,13 @@ class PaymentClient
      * @param string $description
      * @param bool $isVirtual
      * @param string|null $coupon
+     * @param int|null $pairId
      *
      * @throws PaymentException
      *
      * @return Transaction
      */
-    public function chargeWallet($walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null)
+    public function chargeWallet($walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null, $pairId = null)
     {
         try {
             $response = $this->request('POST', '/api/chargeWallet', [
@@ -199,6 +200,7 @@ class PaymentClient
                     'description' => $description,
                     'is_virtual'  => $isVirtual,
                     'coupon'      => $coupon,
+                    'pair_id'     => $pairId,
                 ],
             ]);
 
@@ -209,10 +211,10 @@ class PaymentClient
     }
 
     public function chargeOrGetTransaction(
-        $walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null)
+        $walletId, $amount, $uid, $description, $isVirtual = false, $coupon = null, $pairId = null)
     {
         try {
-            return $this->chargeWallet($walletId, $amount, $uid, $description, $isVirtual, $coupon);
+            return $this->chargeWallet($walletId, $amount, $uid, $description, $isVirtual, $coupon, $pairId);
         } catch (PaymentException $e) {
             return $this->getTransactionFromException($e);
         }
