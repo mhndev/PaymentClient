@@ -8,6 +8,7 @@ namespace Digipeyk\PaymentClient\Objects;
  * @property int $virtual_amount
  * @property string $unique_key
  * @property int $shop_id
+ * @property string $tag
  * @property int $wallet_id
  * @property int|null $discount_id
  * @property int $credit_before

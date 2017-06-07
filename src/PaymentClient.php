@@ -134,19 +134,21 @@ class PaymentClient
      *
      * @param int|null $walletId
      * @param string|null $userId
+     * @param string $tag
      *
      * @throws PaymentException
      *
      * @return Wallet
      */
-    public function getWallet($walletId, $userId = null)
+    public function getWallet($walletId, $userId = null, $tag = '')
     {
         try {
             $response = $this->request('GET', '/api/getWallet', [
                 'query' => [
-                    'shop_name' => $this->shopName,
-                    'wallet_id' => $walletId,
-                    'user_id'   => $userId,
+                    'shop_name'  => $this->shopName,
+                    'wallet_id'  => $walletId,
+                    'user_id'    => $userId,
+                    'wallet_tag' => $tag,
                 ],
             ]);
 
@@ -160,25 +162,15 @@ class PaymentClient
      * Create a wallet for a user.
      *
      * @param string $userId
+     * @param string $tag
      *
      * @throws PaymentException
      *
      * @return Wallet
      */
-    public function createWallet($userId)
+    public function createWallet($userId, $tag = '')
     {
-        try {
-            $response = $this->request('POST', '/api/createWallet', [
-                'json' => [
-                    'shop_name' => $this->shopName,
-                    'user_id'   => $userId,
-                ],
-            ]);
-
-            return new Wallet($this->getResult($response->getBody()->getContents()));
-        } catch (RequestException $e) {
-            throw $this->wrapException($e);
-        }
+        return $this->getWallet(null, $userId, $tag);
     }
 
     /**

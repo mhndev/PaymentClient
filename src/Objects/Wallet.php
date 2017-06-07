@@ -6,6 +6,7 @@ namespace Digipeyk\PaymentClient\Objects;
  * @property int $id
  * @property string $user_id
  * @property int $shop_id
+ * @property string $tag
  * @property int $credit
  * @property int $virtual_credit
  * @property int $sum_charges
