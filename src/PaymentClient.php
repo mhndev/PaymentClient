@@ -269,19 +269,17 @@ class PaymentClient
      * Search in the list of transactions. The result is simple-paginated (not length aware).
      *
      * @param int|null $userId
+     * @param string|null $tag
      * @param DateTime|null $fromDate
      * @param DateTime|null $toDate
      * @param bool $pair
      * @param bool $descending
      * @param int|null $page
      * @param int|null $perPage
-     *
-     * @throws PaymentException
-     *
      * @return TransactionPagination
+     * @throws PaymentException
      */
-    public function queryTransactions($userId = null, DateTime $fromDate = null, DateTime $toDate = null,
-                                      $pair = true, $descending = true, $page = 1, $perPage = 100)
+    public function queryTransactions($userId = null, $tag = null, DateTime $fromDate = null, DateTime $toDate = null, $pair = true, $descending = true, $page = 1, $perPage = 100)
     {
         try {
             $query = [
@@ -293,6 +291,10 @@ class PaymentClient
             if (! is_null($userId)) {
                 $query['user_id'] = $userId;
             }
+            if (! is_null($tag)) {
+                $query['tag'] = $tag;
+            }
+
             if (! is_null($fromDate)) {
                 $query['from_date'] = $fromDate->format('Y-m-d H:i:s');
             }

@@ -22,12 +22,7 @@ class WalletTest extends PHPUnit_Framework_TestCase
         $userId = 'rand:' . uniqid();
         $wallet = $this->client->createWallet($userId);
         $this->assertEquals(0, $wallet->credit);
-        try {
-            $this->client->createWallet($userId);
-            $this->assertFalse(true);
-        } catch (PaymentException $e) {
-            $this->assertEquals(400, $e->getCode());
-        }
+        $this->client->createWallet($userId);
 
         $transaction = $this->client->chargeWallet($wallet->id, 1000, 'test1:'.$userId, '...');
         $this->assertEquals($transaction->id,

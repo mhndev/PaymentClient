@@ -39,9 +39,9 @@ class ManualTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($wallet->credit + 1000, $walletAfter->credit);
 
         //get the last transaction
-        $transactions = $this->client->queryTransactions(true, 21, null, false, true);
-        $this->assertCount(1, $transactions);
-        $this->assertEquals(1000, $transactions[0]->amount);
+        $transactions = $this->client->queryTransactions($wallet->user_id, $wallet->tag, null, null,false, true);
+        $this->assertCount(1, $transactions->transactions);
+        $this->assertEquals(1000, $transactions->transactions[0]->amount);
 
         //discharge the account
         $transaction = $this->client->chargeWallet(21, -1000, uniqid('test'), 'Pay for something');
