@@ -148,7 +148,7 @@ class PaymentClient
                     'shop_name'  => $this->shopName,
                     'wallet_id'  => $walletId,
                     'user_id'    => $userId,
-                    'wallet_tag' => $tag,
+                    'tag' => $tag,
                 ],
             ]);
 
