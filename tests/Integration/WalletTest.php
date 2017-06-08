@@ -20,8 +20,9 @@ class WalletTest extends PHPUnit_Framework_TestCase
     public function test_create_a_wallet()
     {
         $userId = 'rand:' . uniqid();
-        $wallet = $this->client->createWallet($userId);
+        $wallet = $this->client->createWallet($userId, 'test');
         $this->assertEquals(0, $wallet->credit);
+        $this->assertEquals('test', $wallet->tag);
         $this->client->createWallet($userId);
 
         $transaction = $this->client->chargeWallet($wallet->id, 1000, 'test1:'.$userId, '...');
