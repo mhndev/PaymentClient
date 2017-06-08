@@ -319,11 +319,31 @@ class PaymentClient
         }
     }
 
+    /**
+     * @param int[] $ids
+     *
+     * @return Transaction[]
+     *
+     * @throws PaymentException
+     */
+    public function getTransactionsById(array $ids)
+    {
+        try {
+            $response = $this->request('GET', '/api/digipeyk/getTransactionsById', [
+                'query' => [
+                    'ids' => $ids,
+                ],
+            ]);
+
+            return $this->toArrayOfTransactions($this->getResult($response->getBody()->getContents()));
+        } catch (RequestException $e) {
+            throw $this->wrapException($e);
+        }
+    }
+
     private function toTransactions(array $paginator)
     {
-        $transactions = array_map(function (array $transaction) {
-            return new Transaction($transaction);
-        }, $paginator['_embedded']['transactions']);
+        $transactions = $this->toArrayOfTransactions($paginator['_embedded']['transactions']);
 
         return new TransactionPagination(
             $transactions,
@@ -333,6 +353,12 @@ class PaymentClient
             $paginator['last_page']);
     }
 
+    private function toArrayOfTransactions($raw)
+    {
+        return array_map(function (array $transaction) {
+            return new Transaction($transaction);
+        }, $raw);
+    }
     /**
      * @param string $body
      *

@@ -1,6 +1,7 @@
 <?php
 
 use Digipeyk\PaymentClient\Exceptions\PaymentException;
+use Digipeyk\PaymentClient\Objects\Transaction;
 use Digipeyk\PaymentClient\Objects\TransferAndPayDescriptions;
 use Digipeyk\PaymentClient\PaymentClient;
 
@@ -55,5 +56,10 @@ class WalletTest extends PHPUnit_Framework_TestCase
         $wallet1 = $this->client->getWallet($wallet1->id);
         $this->assertEquals(2000, $wallet1->credit);
         $this->assertEquals(3000, $wallet1->sum_charges);
+
+        $list = $this->client->getTransactionsById([$transaction->id]);
+        $this->assertCount(1, $list);
+        $this->assertInstanceOf(Transaction::class, $list[0]);
+        $this->assertEquals($transaction->id, $list[0]->id);
     }
 }
