@@ -159,6 +159,37 @@ class PaymentClient
     }
 
     /**
+     * @param array $userIds
+     * @param string $tag
+     * @return array
+     * @throws PaymentException
+     */
+    public function getWallets($userIds = [], $tag='')
+    {
+        try {
+
+            $response = $this->request('GET', '/api/digipeyk/wallets', [
+                'query' => [
+                    'user_ids' => $userIds,
+                    'tag'      => $tag
+                ],
+            ]);
+
+            $wallets = $this->getResult((string) $response->getBody());
+            
+            return array_map(function ($wallet){
+                    return new Wallet($wallet);
+            }, $wallets);
+
+        } catch (RequestException $e) {
+            throw $this->wrapException($e);
+        }
+    }
+
+
+
+
+    /**
      * Create a wallet for a user.
      *
      * @param string $userId
