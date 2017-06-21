@@ -372,6 +372,34 @@ class PaymentClient
         }
     }
 
+    /**
+     * @param $token
+     * @return array
+     * @throws PaymentException
+     */
+    public function getReferral($token)
+    {
+        try {
+            $response = $this->client->request('GET', '/api/referral/me', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $token,
+                ],
+            ]);
+            return $this->getResult($response->getBody()->getContents());
+        }
+        catch (RequestException $e) {
+            if ($e->getCode() == 401) {
+               throw new PaymentException();
+            }
+            else{
+                throw $this->wrapException($e);
+            }
+        }
+    }
+
+
+
     private function toTransactions(array $paginator)
     {
         $transactions = $this->toArrayOfTransactions($paginator['_embedded']['transactions']);
@@ -437,4 +465,6 @@ class PaymentClient
         }
         return new Transaction($json['error']['info']['transaction']);
     }
+
+
 }
